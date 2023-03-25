@@ -48,7 +48,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
                             borderRadius="lg"
                             overflowY="hidden"
                         >
-                            message here
+                            {/* message here */}
                         </Box>
                     </Text>
                 </>

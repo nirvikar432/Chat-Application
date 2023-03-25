@@ -8,6 +8,10 @@ import ProfileModal from './miscellaneous/ProfileModal'
 import UpdateGroupChatModal from './miscellaneous/UpdateGroupChatModal'
 import '../Components/styles.css'
 import ScrollableChat from './ScrollableChat'
+import io from 'socket.io-client'
+
+const ENDPOINT = "http://localhost:5000"
+var socket, selectedChatCompare;
 
 
 const SingleChat = ({ fetchAgain, setFetchAgain }) => {
@@ -15,6 +19,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     const [messages, setMessages] = useState([])
     const [loading, setLoading] = useState(false);
     const [newMessage, setNewMessage] = useState("");
+    const [socketConnected, setSocketConnected] = useState(false)
     const toast = useToast();
 
     const { user, selectedChat, setSelectedChat } = ChatState()
@@ -32,11 +37,11 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
                 const { data } = await axios.post("/api/message",
                     {
                         content: newMessage,
-                        chatId: selectedChat._id,
+                        chatId: selectedChat,
                     },
                     config
                 );
-                // console.log(data)
+                socket.emit("new message", data);
 
                 setMessages([...messages, data]);
             } catch (error) {
@@ -51,27 +56,39 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
             }
         }
     }
+
+    useEffect(() => {
+        socket = io(ENDPOINT);
+        socket.emit("setup", user);
+        socket.on("connection", () => setSocketConnected(true));
+        // socket.on("typing", () => setIsTyping(true));
+        // socket.on("stop typing", () => setIsTyping(false));
+        // eslint-disable-next-line
+    }, []);
+
+    useEffect(() => {
+        fetchMessages();
+        selectedChatCompare = selectedChat;
+        // eslint-disable-next-line
+    }, [selectedChat]);
+
     const typingHandler = (e) => {
         setNewMessage(e.target.value);
     }
 
     const fetchMessages = async () => {
         if (!selectedChat) return;
-
         try {
             const config = {
                 headers: {
                     Authorization: `Bearer ${user.token}`,
                 },
             };
-
             setLoading(true);
-
             const { data } = await axios.get(`/api/message/${selectedChat._id}`, config);
             setMessages(data);
             setLoading(false);
-
-            // socket.emit("join chat", selectedChat._id);
+            socket.emit("join chat", selectedChat._id);
         } catch (error) {
             toast({
                 title: "Error Occured!",
@@ -85,11 +102,17 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     };
 
     useEffect(() => {
-        fetchMessages();
-
-        // selectedChatCompare = selectedChat;
-        // eslint-disable-next-line
-    }, [selectedChat]);
+        socket.on("message recieved", (newMessageRecieved) => {
+            if (!selectedChatCompare || selectedChatCompare._id !== newMessageRecieved.chat._id) {
+                //     if (!notification.includes(newMessageRecieved)) {
+                //         setNotification([newMessageRecieved, ...notification]);
+                //         setFetchAgain(!fetchAgain);
+            }
+            else {
+                setMessages([...messages, newMessageRecieved]);
+            }
+        });
+    });
 
 
 

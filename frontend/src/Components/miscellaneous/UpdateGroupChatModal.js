@@ -160,8 +160,7 @@ const UpdateGroupChatModal = ({ fetchMessages, fetchAgain, setFetchAgain }) => {
                     Authorization: `Bearer ${user.token}`,
                 },
             };
-            const { data } = await axios.put(
-                `/api/chat/groupremove`,
+            const { data } = await axios.put(`/api/chat/groupremove`,
                 {
                     chatId: selectedChat._id,
                     userId: user1._id,

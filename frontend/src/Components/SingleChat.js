@@ -25,7 +25,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     const [istyping, setIsTyping] = useState(false);
     const toast = useToast();
 
-    const { user, selectedChat, setSelectedChat } = ChatState()
+    const { user, selectedChat, setSelectedChat, notification, setNotification } = ChatState()
 
     const sendMessage = async (event) => {
         if (event.key === "Enter" && newMessage) {
@@ -75,6 +75,8 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
         selectedChatCompare = selectedChat;
         // eslint-disable-next-line
     }, [selectedChat]);
+
+
 
     const typingHandler = (e) => {
         setNewMessage(e.target.value);
@@ -126,11 +128,11 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     useEffect(() => {
         socket.on("message recieved", (newMessageRecieved) => {
             if (!selectedChatCompare || selectedChatCompare._id !== newMessageRecieved.chat._id) {
-                //     if (!notification.includes(newMessageRecieved)) {
-                //         setNotification([newMessageRecieved, ...notification]);
-                //         setFetchAgain(!fetchAgain);
-            }
-            else {
+                if (!notification.includes(newMessageRecieved)) {
+                    setNotification([newMessageRecieved, ...notification]);
+                    setFetchAgain(!fetchAgain);
+                }
+            } else {
                 setMessages([...messages, newMessageRecieved]);
             }
         });

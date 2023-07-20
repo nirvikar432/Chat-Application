@@ -20,7 +20,7 @@ Start the server
 Start the Client
 
 ```bash
-  //open now terminal
+  //Now open terminal
   cd frontend
   npm start
 ```
